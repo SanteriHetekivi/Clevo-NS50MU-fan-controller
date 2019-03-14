@@ -1,0 +1,16 @@
+[Unit]
+Description=Clevo laptop fan control
+ 
+[Service]
+Type=simple
+ 
+User=root
+Group=root
+UMask=007
+ 
+ExecStart=/your/bin/file/here
+ 
+Restart=on-failure
+ 
+[Install]
+WantedBy=multi-user.target
