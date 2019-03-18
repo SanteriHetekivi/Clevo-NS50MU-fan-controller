@@ -1,95 +1,101 @@
-# Clevo N151ZU fan control
+# Clevo-N151ZU automatic fan control
 
-Default (bios) fan behavior for this laptop is not optimized, this project brings a smarter automatic fan control. It makes it perfectly silent for less-demanding tasks like office, web, or even video-watch, but gradually power the fan when necessary.
+Default (bios) fan behavior for these laptops is not optimized, this project brings a smarter automatic fan control. It makes it perfectly silent for less-demanding tasks like office, web, or even video-watch, but gradually power the fan when necessary.
 
-## Getting Started
+<div style="red;">
+In most computers, there is a (bios-level) temperature cut-off that will brutally cause it to power-off before damage to occur.
+However, this software comes without waranty, by using it your computer may overheat and be damaged. Although it runs very well on my own device, I am not be responsible for any consequence that may occur.
+</div>
 
-These instructions will help you to get the software and setup your system to use it.
-
-### Prerequisites
+## Prerequisites
 
 ```
-g++ build-essential
+gcc build-essential
 ```
 
-### Installing
+On debian-based distros (Ubuntu, ...):
+
+```
+sudo apt install -y git gcc build-essential
+```
+
+## Installing
 
 Clone the repo:
-```
-git clone ...
-```
-
-Compile with g++:
-```
-g++ .../ -o .../N151ZU_fan_controler
-```
-
-Make executable:
-```
-chmod +x .../N151ZU_fan_controller
-```
-
-Copy to the systemd scripts folder:
-```
-sudo cp .../clevo-fan.service /etc/systemd/system/
-sudo systemctl enable clevo-fan.service
-```
-
-
-End with an example of getting some data out of the system or using it for a little demo
-
-## Running the tests
-
-Explain how to run the automated tests for this system
-
-### Break down into end to end tests
-
-Explain what these tests test and why
 
 ```
-Give an example
+git clone https://gitlab.com/francois.kneib/clevo-N151ZU-fan-controller.git
 ```
 
-### And coding style tests
-
-Explain what these tests test and why
+Go into the project folder:
 
 ```
-Give an example
+cd clevo-N151ZU-fan-controller
 ```
 
-## Deployment
+Build & install:
 
-Add additional notes about how to deploy this on a live system
+```
+sudo make all
+```
 
-## Built With
+This will:
 
-* [Dropwizard](http://www.dropwizard.io/1.0.2/docs/) - The web framework used
-* [Maven](https://maven.apache.org/) - Dependency Management
-* [ROME](https://rometools.github.io/rome/) - Used to generate RSS Feeds
+1. build the c++ file into N151ZU-fan-controller and make it executable,
+2. copy N151ZU-fan-controller bin file into /usr/local/bin,
+3. copy the service file N151ZU-fan-controller.service into /etc/systemd/system/,
+4. enable the service at startup,
+5. launch the service now.
 
-## Contributing
+You can now check that the service is running:
 
-Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c63ec426) for details on our code of conduct, and the process for submitting pull requests to us.
+```
+systemctl status -n20 N151ZU-fan-controller.service
+```
 
-## Versioning
+should output something like:
 
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags). 
+```
+● N151ZU-fan-controller.service - Clevo_N151ZU-based laptop automatic fan control                                                                                                                                                           
+   Loaded: loaded (/etc/systemd/system/N151ZU-fan-controller.service; enabled; vendor preset: enabled)
+   Active: active (running) since Mon 2019-03-18 13:39:53 CET; 24min ago
+ Main PID: 31382 (N151ZU-fan-cont)
+    Tasks: 1 (limit: 4915)
+   CGroup: /system.slice/N151ZU-fan-controller.service
+           └─31382 /usr/local/bin/N151ZU-fan-controller
+
+mars 18 14:04:04 lafiteIII N151ZU-fan-controller[31382]: T:50°C set fan to 0%
+mars 18 14:04:04 lafiteIII N151ZU-fan-controller[31382]: T:50°C
+mars 18 14:04:05 lafiteIII N151ZU-fan-controller[31382]: T:50°C
+mars 18 14:04:05 lafiteIII N151ZU-fan-controller[31382]: T:50°C
+mars 18 14:04:06 lafiteIII N151ZU-fan-controller[31382]: T:50°C
+mars 18 14:04:06 lafiteIII N151ZU-fan-controller[31382]: T:50°C
+mars 18 14:04:07 lafiteIII N151ZU-fan-controller[31382]: T:50°C
+mars 18 14:04:07 lafiteIII N151ZU-fan-controller[31382]: T:50°C
+mars 18 14:04:08 lafiteIII N151ZU-fan-controller[31382]: T:50°C
+mars 18 14:04:08 lafiteIII N151ZU-fan-controller[31382]: T:50°C
+mars 18 14:04:09 lafiteIII N151ZU-fan-controller[31382]: T:50°C
+mars 18 14:04:09 lafiteIII N151ZU-fan-controller[31382]: T:50°C
+mars 18 14:04:10 lafiteIII N151ZU-fan-controller[31382]: T:50°C
+mars 18 14:04:10 lafiteIII N151ZU-fan-controller[31382]: T:50°C
+mars 18 14:04:11 lafiteIII N151ZU-fan-controller[31382]: T:50°C
+mars 18 14:04:11 lafiteIII N151ZU-fan-controller[31382]: T:50°C
+mars 18 14:04:12 lafiteIII N151ZU-fan-controller[31382]: T:50°C
+mars 18 14:04:12 lafiteIII N151ZU-fan-controller[31382]: T:50°C
+mars 18 14:04:13 lafiteIII N151ZU-fan-controller[31382]: T:50°C
+mars 18 14:04:13 lafiteIII N151ZU-fan-controller[31382]: T:50°C
+```
 
 ## Authors
 
-* **Billie Thompson** - *Initial work* - [PurpleBooth](https://github.com/PurpleBooth)
-
-See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
+* **François Kneib** - *Initial work*
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
+This project is licensed under the GNU General Public License v3 or any later version (GPL-3.0-or-later). See [LICENSE][LICENSE].
 
 ## Acknowledgments
 
-* Hat tip to anyone whose code was used
-* Inspiration
-* etc
+This project uses some code from TuxedoFanControl program: https://github.com/tuxedocomputers/tuxedo-fan-control
 
  
