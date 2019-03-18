@@ -2,10 +2,10 @@
 
 Default (bios) fan behavior for these laptops is not optimized, this project brings a smarter automatic fan control. It makes it perfectly silent for less-demanding tasks like office, web, or even video-watch, but gradually power the fan when necessary.
 
-<div style="red;">
+<aside class="warning">
 In most computers, there is a (bios-level) temperature cut-off that will brutally cause it to power-off before damage to occur.
 However, this software comes without waranty, by using it your computer may overheat and be damaged. Although it runs very well on my own device, I am not be responsible for any consequence that may occur.
-</div>
+</aside>
 
 ## Prerequisites
 
