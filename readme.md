@@ -1,11 +1,16 @@
 # Clevo-N151ZU automatic fan control
 
-Default (bios) fan behavior for these laptops is not optimized, this project brings a smarter automatic fan control. It makes it perfectly silent for less-demanding tasks like office, web, or even video-watch, but gradually power the fan when necessary.
+Default (bios) fan behavior for these laptops is not optimized as it triggers fan at about 51°C, making it noizy even when doing almost nothing. However, the processor i7-85**U have a max temp of 100°C.
+This project brings a smarter automatic fan control, it makes it perfectly silent for less-demanding tasks like office, web, or even video-watch, but gradually power the fan when necessary. The behavior of the program is setup to:
 
-<Warning>
-In most computers, there is a (bios-level) temperature cut-off that will brutally cause it to power-off before damage to occur.
-However, this software comes without waranty, by using it your computer may overheat and be damaged. Although it runs very well on my own device, I am not be responsible for any consequence that may occur.
-</Warning>
+* check in-processor temperature every 0.5s,
+* shut-down fan if temp is below 70°C,
+* turn on fan linearly from 50% to 100% between 70°C and 90°C,
+* fan speed peaks (local maximums) will last for at least 10s to avoid bumps.
+
+**In most computers, there is a (bios-level) temperature cut-off that will brutally cause it to power-off before any damage occurs. However, this software comes without waranty, by using it your computer may overheat and be damaged. Although it runs very well on my own device, I am not be responsible for any consequence that may occur.**
+
+That being said, I never reached 90°C with this controller.
 
 ## Prerequisites
 
@@ -85,6 +90,13 @@ mars 18 14:04:12 lafiteIII N151ZU-fan-controller[31382]: T:50°C
 mars 18 14:04:13 lafiteIII N151ZU-fan-controller[31382]: T:50°C
 mars 18 14:04:13 lafiteIII N151ZU-fan-controller[31382]: T:50°C
 ```
+## Note
+
+To watch for the temperature of your cpu (for example with a desktop widget), you can use the following command (in millidegrees):
+
+```
+cat /sys/class/thermal/thermal_zone0/temp
+```
 
 ## Authors
 
@@ -92,7 +104,7 @@ mars 18 14:04:13 lafiteIII N151ZU-fan-controller[31382]: T:50°C
 
 ## License
 
-This project is licensed under the GNU General Public License v3 or any later version (GPL-3.0-or-later). See [LICENSE][LICENSE].
+This project is licensed under the GNU General Public License v3 or any later version (GPL-3.0-or-later). See [LICENSE](LICENSE).
 
 ## Acknowledgments
 
