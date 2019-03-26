@@ -15,6 +15,7 @@ using namespace std;
 #define FAN_MIN_VALUE           100 //speed (between 0 and 255) at which fan will turn when FAN_OFF_TEMP is reached
 #define FAN_PEAK_HOLD_TIME      10000  //when a maximum of fan rotation rate is reached, hold much time (ms) to hold it before allowing to decrease the value
 
+#define REFRESH_RATE            200000 //time to wait between each controller loop (ms)
 
 
 
@@ -134,7 +135,7 @@ int main (int argc, char *argv[])
         }
         cout<<endl;
         lastFanSpeed=slidingMaxFanSpeed;
-        usleep(500000);
+        usleep(REFRESH_RATE);
     }
     return 0;
 }
