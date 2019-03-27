@@ -15,7 +15,7 @@ using namespace std;
 #define FAN_MIN_VALUE           100 //speed (between 0 and 255) at which fan will turn when FAN_OFF_TEMP is reached
 #define FAN_PEAK_HOLD_TIME      10000  //when a maximum of fan rotation rate is reached, hold much time (ms) to hold it before allowing to decrease the value
 
-#define REFRESH_RATE            200000 //time to wait between each controller loop (ms)
+#define REFRESH_RATE            100000 //time to wait between each controller loop (ms)
 
 
 
@@ -127,11 +127,10 @@ int main (int argc, char *argv[])
             slidingMaxFanSpeed=dynamicFanSpeed;
             maxFanSpeedTime=time();
         }
-        cout<<"T:"<<temp<<"°C";
         if(lastFanSpeed!=slidingMaxFanSpeed || lastTimeFanUpdate+10000 < time()){ //send value if it changed or if we didn't do it since more than 10s.
             setFanSpeed(slidingMaxFanSpeed);
             lastTimeFanUpdate=time();
-            cout<<" set fan to "<<round((float)(slidingMaxFanSpeed)/255*100)<<"%";
+            cout<<"T:"<<temp<<"°C | set fan to "<<round((float)(slidingMaxFanSpeed)/255*100)<<"%";
         }
         cout<<endl;
         lastFanSpeed=slidingMaxFanSpeed;
