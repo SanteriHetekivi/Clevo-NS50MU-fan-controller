@@ -17,7 +17,7 @@ install-service:install-bin
 	cp N151ZU-fan-controller.service /etc/systemd/system/
 	systemctl enable N151ZU-fan-controller.service
 
-all launch-service:install-service
+all: install-service
 	service N151ZU-fan-controller start
 	
 clean:
