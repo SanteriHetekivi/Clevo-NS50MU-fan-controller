@@ -98,6 +98,8 @@ To watch for the temperature of your cpu (for example with a desktop widget), yo
 cat /sys/class/thermal/thermal_zone0/temp
 ```
 
+If you want the daemon to write logs in syslog, use `sudo make -VERBOSE=ON all`.
+
 ## Authors
 
 * **François Kneib** - *Initial work*
