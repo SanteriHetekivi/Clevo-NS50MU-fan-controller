@@ -1,7 +1,15 @@
 service_active:=$(shell systemctl is-active N151ZU-fan-controller.service)
 
+ifneq ($(VERBOSE) , ON)
+	VERBOSE=OFF
+endif
+
 compile:
+ifeq ($(VERBOSE) , ON)
+	g++ -DVERBOSE N151ZU-fan-controller.cpp -o N151ZU-fan-controller
+else
 	g++ N151ZU-fan-controller.cpp -o N151ZU-fan-controller
+endif
 
 install-bin: compile
 	chmod +x N151ZU-fan-controller

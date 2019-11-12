@@ -128,10 +128,12 @@ int main (int argc, char *argv[])
             slidingMaxFanSpeed=dynamicFanSpeed;
             maxFanSpeedTime=time();
         }
-        if(lastFanSpeed!=slidingMaxFanSpeed || lastTimeFanUpdate+MAX_FAN_SET_INTERVAL < time()){ //send value if it changed or if we didn't do it since more than 10s.
+        if(lastFanSpeed!=slidingMaxFanSpeed || lastTimeFanUpdate+MAX_FAN_SET_INTERVAL < time()){ //send value if it changed or if we didn't do it since more than "MAX_FAN_SET_INTERVAL" seconds.
             setFanSpeed(slidingMaxFanSpeed);
             lastTimeFanUpdate=time();
-            cout<<"T:"<<temp<<"°C | set fan to "<<round((float)(slidingMaxFanSpeed)/255*100)<<"%";
+            #ifdef VERBOSE
+                cout<<"T:"<<temp<<"°C | set fan to "<<round((float)(slidingMaxFanSpeed)/255*100)<<"%";
+            #endif
         }
         cout<<endl;
         lastFanSpeed=slidingMaxFanSpeed;
