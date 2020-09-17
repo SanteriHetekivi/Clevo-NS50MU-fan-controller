@@ -10,9 +10,10 @@ using namespace std;
 #define EC_DATA_PORT            0x62
 #define TEMP                    0x9E
 
+#define FAN_MIN_VALUE           60  //minimal rotation speed of the fan (0-255)
 #define FAN_OFF_TEMP            70  //temp below which fan is off
 #define FAN_MAX_TEMP            90  //at which temperature the fan should be maximum ?
-#define FAN_MIN_VALUE           100 //speed (between 0 and 255) at which fan will turn when FAN_OFF_TEMP is reached
+#define FAN_START_VALUE           100 //speed (between 0 and 255) at which fan will turn when FAN_OFF_TEMP is reached
 #define FAN_PEAK_HOLD_TIME      10000  //when a maximum of fan rotation rate is reached, hold much time (ms) to hold it before allowing to decrease the value
 
 #define REFRESH_RATE            250 //time to wait between each controller loop (ms)
@@ -120,8 +121,8 @@ int main (int argc, char *argv[])
     while(1){
         int temp = GetLocalTemp();
         //dynamic fan speed is the computed instantaneous speed, whithout hysteresis (FAN_PEAK_HOLD_TIME)
-        int dynamicFanSpeed = round((float)((float)(temp-FAN_OFF_TEMP)/(FAN_MAX_TEMP-FAN_OFF_TEMP)*(255-FAN_MIN_VALUE) + FAN_MIN_VALUE));
-        if(dynamicFanSpeed<FAN_MIN_VALUE)dynamicFanSpeed=0;
+        int dynamicFanSpeed = round((float)((float)(temp-FAN_OFF_TEMP)/(FAN_MAX_TEMP-FAN_OFF_TEMP)*(255-FAN_START_VALUE) + FAN_START_VALUE));
+        if(dynamicFanSpeed<FAN_START_VALUE)dynamicFanSpeed=0;
         if(dynamicFanSpeed>255)dynamicFanSpeed=255;
         
         if( dynamicFanSpeed>slidingMaxFanSpeed || time()>maxFanSpeedTime+FAN_PEAK_HOLD_TIME ){ //update max values if max is overcome or if the time (FAN_PEAK_HOLD_TIME) is reached
@@ -129,7 +130,7 @@ int main (int argc, char *argv[])
             maxFanSpeedTime=time();
         }
         if(lastFanSpeed!=slidingMaxFanSpeed || lastTimeFanUpdate+MAX_FAN_SET_INTERVAL < time()){ //send value if it changed or if we didn't do it since more than "MAX_FAN_SET_INTERVAL" seconds.
-            setFanSpeed(slidingMaxFanSpeed);
+            setFanSpeed(max(FAN_MIN_VALUE,slidingMaxFanSpeed));
             lastTimeFanUpdate=time();
             #ifdef VERBOSE
                 cout<<"T:"<<temp<<"°C | set fan to "<<round((float)(slidingMaxFanSpeed)/255*100)<<"%";
