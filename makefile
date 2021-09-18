@@ -1,4 +1,4 @@
-service_active:=$(shell systemctl is-active N151ZU-fan-controller.service)
+service_active:=$(shell systemctl is-active NS50MU-fan-controller.service)
 
 ifneq ($(VERBOSE) , ON)
 	VERBOSE=OFF
@@ -6,33 +6,33 @@ endif
 
 compile:
 ifeq ($(VERBOSE) , ON)
-	g++ -DVERBOSE N151ZU-fan-controller.cpp -o N151ZU-fan-controller
+	g++ -DVERBOSE NS50MU-fan-controller.cpp -o NS50MU-fan-controller
 else
-	g++ N151ZU-fan-controller.cpp -o N151ZU-fan-controller
+	g++ NS50MU-fan-controller.cpp -o NS50MU-fan-controller
 endif
 
 install-bin: compile
-	chmod +x N151ZU-fan-controller
+	chmod +x NS50MU-fan-controller
 ifeq ($(service_active) , active)
-	service N151ZU-fan-controller stop
+	service NS50MU-fan-controller stop
 endif
-	cp N151ZU-fan-controller /usr/local/bin/
+	cp NS50MU-fan-controller /usr/local/bin/
 ifeq ($(service_active) , active)
-	service N151ZU-fan-controller start
+	service NS50MU-fan-controller start
 endif
 
 install-service:install-bin
-	cp N151ZU-fan-controller.service /etc/systemd/system/
-	systemctl enable N151ZU-fan-controller.service
+	cp NS50MU-fan-controller.service /etc/systemd/system/
+	systemctl enable NS50MU-fan-controller.service
 
 all: install-service
-	service N151ZU-fan-controller start
+	service NS50MU-fan-controller start
 	
 clean:
-	rm N151ZU-fan-controller
+	rm NS50MU-fan-controller
 
 uninstall:
-	service N151ZU-fan-controller stop
-	systemctl disable N151ZU-fan-controller.service
-	rm /etc/systemd/system/N151ZU-fan-controller.service
-	rm /usr/local/bin/N151ZU-fan-controller
+	service NS50MU-fan-controller stop
+	systemctl disable NS50MU-fan-controller.service
+	rm /etc/systemd/system/NS50MU-fan-controller.service
+	rm /usr/local/bin/NS50MU-fan-controller
