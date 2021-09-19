@@ -4,7 +4,9 @@
 #include <cstdlib>
 #include <math.h>
 #include <chrono>
-using namespace std; 
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "EndlessLoop"
+using namespace std;
 
 #define EC_COMMAND_PORT         0x66
 #define EC_DATA_PORT            0x62

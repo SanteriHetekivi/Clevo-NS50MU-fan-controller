@@ -3,12 +3,11 @@ Description=Clevo_N151ZU-based laptop automatic fan control
  
 [Service]
 Type=simple
- 
 User=root
 Group=root
 UMask=007
  
-ExecStart=/usr/local/bin/N151ZU-fan-controller
+ExecStart=/usr/local/bin/NS50MU-fan-controller
  
 Restart=on-failure
 Nice=-20
