@@ -1,54 +1,87 @@
+// Communicate with embedded controller.
 #include <sys/io.h>
-#include <unistd.h>
-#include <iostream>
-#include <cstdlib>
-#include <math.h>
+// For generating time to sleep.
 #include <chrono>
+// For sleeping.
+#include <thread>
+// For outputing data.
+#include <iostream>
+// For min and max calculations.
+#include <math.h>
+#include <string>
+
+
+// Save current pragma diagnostic state.
 #pragma clang diagnostic push
+// Ignore endless loop.
 #pragma ide diagnostic ignored "EndlessLoop"
-using namespace std;
 
+// Embedded controller command port.
 #define EC_COMMAND_PORT         0x66
+// Embedded controller data port.
 #define EC_DATA_PORT            0x62
-#define TEMP                    0x9E
 
-#define FAN_MIN_VALUE           40  //minimal rotation speed of the fan (0-255)
+// Command to get temperature.
+#define COMMAND_TEMP            0x9E
+// Command to set speed.
+#define COMMAND_SPEED           0x99
 
-#define FAN_OFF_TEMP            65  //temp below which the fan is off
-#define FAN_25P_TEMP            70  //temp at which fan will be spinning at it's 25% speed.
-#define FAN_50P_TEMP            78  //temp at which fan will be spinning at it's 50% speed.
-#define FAN_75P_TEMP            82  //temp at which fan will be spinning at it's 75% speed.
-#define FAN_100P_TEMP           85  //at which temperature and above the fan should be at it's 100%?
+// Temperature index.
+#define TEMP_INDEX              1
 
-#define REFRESH_RATE            250 //time to wait between each controller loop (ms)
-#define MAX_FAN_SET_INTERVAL    2000//maximal time between two fan rate send command
+// Id for fan.
+#define FAN_ID                  0x01
+
+// Min speed as percentage to run the fan.
+#define FAN_SPEED_MIN           30
+// Max speed as percentage to run the fan.
+#define FAN_SPEED_MAX           100
+
+// Maximun temperature that starts raising fan speed even if temperature is not raising.
+#define MAX_TEMP                85
+
+// Wait time between loops.
+#define REFRESH_RATE            250
+// Wait this many milliseconds to change speed when temperature is raising, lowering or staying same.
+#define KEEP_REACTION_TIME_MS   1000
+
+// Increment as percentage to raise fan speed.
+#define FAN_RAISE_INCREMENT     5
+// Increment as percentage to lower fan speed.
+#define FAN_LOWER_INCREMENT     5
 
 
-
-static int EcInit()
+/**
+ * @brief Initialize embedded controller.
+ * 
+ */
+static void EcInit()
 {
+    // Request permission to embedded controller's data port.
     if (ioperm(EC_DATA_PORT, 1, 1) != 0)
-    {
-        return 1;
-    }
-
+        throw std::runtime_error("No permission to embedded controller's data port!");
+    
+    // Request permission to embedded controller's command port.
     if (ioperm(EC_COMMAND_PORT, 1, 1) != 0)
-    {
-        return 1;
-    }
-
-    return 0;
+        throw std::runtime_error("No permission to embedded controller's command port!"); 
 }
 
+/**
+ * @brief Flush embedded controller.
+ * 
+ */
 static void EcFlush()
 {
     while ((inb(EC_COMMAND_PORT) & 0x1) == 0x1)
-    {
         inb(EC_DATA_PORT);
-    }
 }
 
 
+/**
+ * @brief Send command to embedded controller.
+ * 
+ * @param command Command to send.
+ */
 static void SendCommand(int command)
 {
     int tt = 0;
@@ -56,15 +89,16 @@ static void SendCommand(int command)
     {
         tt++;
         if(tt>30000)
-        {
             break;
-        }
     }
-
     outb(command, EC_COMMAND_PORT);
 }
 
-
+/**
+ * @brief Write data to embedded controller.
+ * 
+ * @param data Data to write.
+ */
 static void WriteData(int data)
 {
     while((inb(EC_COMMAND_PORT) & 2));
@@ -72,108 +106,243 @@ static void WriteData(int data)
     outb(data, EC_DATA_PORT);
 }
 
-
+/**
+ * @brief Read byte from embedded controller.
+ * 
+ * @return int Read byte.
+ */
 static int ReadByte()
 {
     int i = 1000000;
-    while ((inb(EC_COMMAND_PORT) & 1) == 0 && i > 0)
-    {
-        i -= 1;
-    }
+    while (
+        (
+            inb(EC_COMMAND_PORT)
+            &
+            1
+        ) == 0
+        &&
+        i > 0
+    ) i -= 1;
 
     if (i == 0)
-    {
         return 0;
-    }
     else
-    {
         return inb(EC_DATA_PORT);
-    }
 }
 
-static void setFanSpeed(int speed){
+/**
+ * @brief Set fan speed to given value.
+ * 
+ * @param speed Fan speed as percentage.
+ */
+static void setFanSpeed(unsigned int speed)
+{
+    // Initialize embedded controller.
     EcInit();
-    SendCommand(0x99);
-    WriteData(0x01); //ID
-    WriteData(speed);
+    // Send command to change speed.
+    SendCommand(COMMAND_SPEED);
+    // Set fan id.
+    WriteData(FAN_ID);
+    // Write speed as value from 0-255.
+    WriteData(
+        round(
+            (
+                std::min(
+                    (float)speed,
+                    (float)100
+                )
+                /
+                100
+            )
+            *
+            255
+        )
+    );
 }
 
+/**
+ * @brief Get the local temperature.
+ * 
+ * @return int Temperature.
+ */
 static int GetLocalTemp()
 {
-    int index = 1;
+    // Initialize embedded controller.
     EcInit();
+    // Flush embedded controller.
     EcFlush();
-    SendCommand(TEMP);
-    WriteData(index);
-    //ReadByte();
-    int value = ReadByte();
-    return value;
+    // Send command to get temperature.
+    SendCommand(COMMAND_TEMP);
+    // Write temperature index.
+    WriteData(TEMP_INDEX);
+    // Return with temperature.
+    return ReadByte();
 }
 
-static unsigned int time(){
-    chrono::milliseconds ms = chrono::duration_cast< chrono::milliseconds >(chrono::system_clock::now().time_since_epoch());
-    unsigned int time = ms.count();
-    return time;
-}
-
-unsigned int perc(unsigned int fanSpeed){
-    return round((float)(fanSpeed)/255*100);
-}
-
-unsigned int unperc(unsigned int fanSpeed){
-    return round((float)(fanSpeed)/100*255);
-}
-
-
+/**
+ * @brief Main function.
+ * 
+ * @param argc Argument count.
+ * @param argv Argument table.
+ * @return int 
+ */
 int main (int argc, char *argv[])
 {
-    int lastFanSpeed = -1;                  //last fan speed value, used to avoid write speed if not necessary
-    int fanSpeed = -1;            //last max speed value, used in combination with FAN_PEAK_HOLD_TIME
-    unsigned int maxFanSpeedTime = 0;       //time at which the last max was reached, used in combination with FAN_PEAK_HOLD_TIME
-    unsigned int lastTimeFanUpdate = 0;     //use this to periodically set the temp unconditionally (useful when wake of from sleep)
-    while(1){
-        int temp = GetLocalTemp();
+    // Init verbose status.
+    bool verbose = false;
 
-        if (temp <= FAN_OFF_TEMP){
-            fanSpeed = 0;
-//            cout << "1! FAN IS OFF";
-        }
-        else if (temp <= FAN_25P_TEMP){
-            fanSpeed = unperc(25 * ( float(temp - FAN_OFF_TEMP) / float(FAN_25P_TEMP - FAN_OFF_TEMP) ) );
-//            cout << "2! FAN IS "<<fanSpeed;
-        }
-        else if (temp <= FAN_50P_TEMP){
-            float slider = ( float(temp - FAN_25P_TEMP) / float(FAN_50P_TEMP - FAN_25P_TEMP) );
-            fanSpeed = unperc(25 + ( 25 * slider ) );
-//            cout << "3! FAN IS "<<fanSpeed << " AND SLIDER IS " << slider;
-        }
-        else if (temp <= FAN_75P_TEMP){
-            float slider = ( float(temp - FAN_50P_TEMP) / float(FAN_75P_TEMP - FAN_50P_TEMP) );
-            fanSpeed = unperc(50 + slider );
-//            cout << "4! FAN IS "<<fanSpeed << " AND SLIDER IS " << slider;
-        }
-        else if (temp <= FAN_100P_TEMP){ //75p is 85c and 100p is 90c
-            float slider = ( float(temp - FAN_75P_TEMP) / float(FAN_100P_TEMP - FAN_75P_TEMP) );
-            fanSpeed = unperc(75 + ( 25 * slider ) );
-//            cout << "5! FAN IS "<<fanSpeed << " AND SLIDER IS " << slider;
-        }
-        else if (temp > FAN_100P_TEMP){
-            fanSpeed = 255;
-//            cout << "6! FAN IS MAX!";
-        }
-        // Make sure fan speed is within boundaries.
-        if(fanSpeed<FAN_MIN_VALUE && fanSpeed != 0){fanSpeed=FAN_MIN_VALUE;}
-        if(fanSpeed>255)fanSpeed=255;
+    // Generate verbose arguments.
+    const unsigned int verbose_strs_count = 2;
+    const std::string verbose_strs[
+        verbose_strs_count
+    ] = {
+        std::string("-v"),
+        std::string("--verbose"),
+    };
 
-        if(lastFanSpeed!=fanSpeed || lastTimeFanUpdate+MAX_FAN_SET_INTERVAL < time()){ 
-        //send value if it changed or if we didn't do it since more than "MAX_FAN_SET_INTERVAL" seconds.
-           setFanSpeed(max(FAN_MIN_VALUE,fanSpeed));
-            lastTimeFanUpdate=time();
-            cout<<"T:"<<temp<<"°C | set fan to "<<perc(fanSpeed)<<"% ("<<fanSpeed<<")";
+    // Check for verbose argument.
+    for(int i = 0; (!verbose && i < argc); ++i)
+    {
+        for(int y = 0; (!verbose && y < verbose_strs_count); ++y)
+        {
+            verbose = (
+                argv[i] == verbose_strs[y]
+            );
         }
-        cout<<endl;
-        lastFanSpeed=fanSpeed;
-        usleep(REFRESH_RATE*1000);
     }
+
+    // Speed of fan when last set.
+    unsigned int lastFanSpeed = 0;
+    // Set to this fan speed.
+    unsigned int fanSpeed = FAN_SPEED_MIN;
+    // Set fan speed.
+    setFanSpeed(fanSpeed);
+
+
+    // Sleep micro second amount.
+    const std::chrono::duration<int64_t, std::milli> sleep_time = std::chrono::milliseconds(
+        REFRESH_RATE
+    );
+    // Wait this many loops to change speed when temperature is raising, lowering or staying same.
+    const unsigned int reaction_loops = KEEP_REACTION_TIME_MS/REFRESH_RATE;
+
+    // Temperature.
+    unsigned int temp = GetLocalTemp();
+    // Last loop temperature.
+    unsigned int lastTemp = GetLocalTemp();
+
+    // How many loops has temperature been raising.
+    unsigned int raising_loops = 0;
+    // How many loops has temperature been lowering or staying the same.
+    unsigned int lowering_or_staying_loops = 0;
+    
+    // Infinite loop.
+    while(true)
+    {
+        // Get temperature.
+        temp = GetLocalTemp();
+        // Print out temperature.
+        if(verbose)
+            std::cout << "Temperature: " << temp << " C" << std::endl << "\t";
+
+        // If
+        if(
+            // temperature is raising
+            0 < (int)(
+                temp
+                -
+                lastTemp
+            )
+            ||
+            // or is over the max.
+            MAX_TEMP < temp
+        )
+        {
+            // Output information about it.
+            if(verbose)
+                std::cout << "Raising or over max!";
+            // Increase raising loops.
+            ++raising_loops;
+
+            // If has been raising more than reaction time gives.
+            if(reaction_loops < raising_loops)
+            {
+                // Raise fan speed by defined increment.
+                fanSpeed = std::min(
+                    (int)(
+                        fanSpeed
+                        +
+                        FAN_RAISE_INCREMENT
+                    ),
+                    FAN_SPEED_MAX
+                );
+
+                // Zero loop counters.
+                lowering_or_staying_loops = 0;
+                raising_loops = 0;
+            }
+        }
+        // Fan speed is not raising or over the max.
+        else
+        {
+            // Inform about it.
+            if(verbose)
+                std::cout << "Lowering or staying the same.";
+            // Increase loop counter.
+            ++lowering_or_staying_loops;
+
+             // If has been lowering or staying the same, more than reaction time gives.
+            if(reaction_loops < lowering_or_staying_loops)
+            {
+                // Lower fan speed by defined increment.
+                fanSpeed = std::max(
+                    (int)(
+                        fanSpeed
+                        -
+                        FAN_LOWER_INCREMENT
+                    ),
+                    FAN_SPEED_MIN
+                );
+
+                // Zero loop counters.
+                lowering_or_staying_loops = 0;
+                raising_loops = 0;
+            }
+        }
+        if(verbose)
+            std::cout << std::endl << "\t";
+
+        // If fan speed changed.
+        if(fanSpeed != lastFanSpeed)
+        {
+            // Output about the change.
+            if(verbose)
+                std::cout << "Changing fan speed " << lastFanSpeed << " % => " << fanSpeed << " %!";
+
+            // Zero loop counters.
+            lowering_or_staying_loops = 0;
+            raising_loops = 0;
+
+            // Set fan speed.
+            setFanSpeed(
+                fanSpeed
+            );
+
+            // Save fan speed as last fan speed.
+            lastFanSpeed=fanSpeed;
+            // Update last loop temperature from this loop temperature.
+            lastTemp = temp;
+        }
+        // Fan speed did not change.
+        else if(verbose)
+            std::cout << "Keeping fan speed at " << fanSpeed << " %";
+        if(verbose)
+            std::cout << std::endl;
+
+        // Sleep set micro seconds.
+        std::this_thread::sleep_for(sleep_time);
+    }
+
+    // Shout not reach here.
     return 0;
 }
