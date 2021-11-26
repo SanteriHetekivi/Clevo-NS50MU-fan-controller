@@ -1,14 +1,6 @@
-# Clevo-NS50MU automatic fan control
+# This version
 
-BIOS fan control of my laptop was kinda too noisy, so I adapted a project for ns50mu. 
-
-* check in-processor temperature every 0.5s,
-* shut-down fan if temp is below 65°C,
-* gently speeds the fan up as cpu temperature rises.
-
-**In most computers, there is a (bios-level) temperature cut-off that will brutally cause it to power-off before any damage occurs. However, this software comes without waranty, by using it your computer may overheat and be damaged. Although it runs very well on my own device, I am not be responsible for any consequence that may occur.**
-
-That being said, I never reached 90°C with this controller.
+This is fork from [Vega D's implementation](https://gitlab.com/vega-d/clevo-ns50mu-fan-controller) witch is fork from [François Kneib's one](https://gitlab.com/francois.kneib/clevo-N151ZU-fan-controller).
 
 ## Prerequisites
 
@@ -67,6 +59,7 @@ If you want the daemon to write logs in syslog, use `sudo make -VERBOSE=ON all`.
 
 * **François Kneib** - *Initial work for N151ZU*
 * **Vega D** - *Adaptation for NS50MU*
+* **Santeri Hetekivi** - *This custom implementation for NS50MU on Arch*
 
 ## License
 
