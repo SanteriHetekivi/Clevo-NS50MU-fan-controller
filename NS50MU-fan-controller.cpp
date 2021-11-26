@@ -37,7 +37,7 @@
 // Max speed as percentage to run the fan.
 #define FAN_SPEED_MAX           100
 
-// Maximun temperature that starts raising fan speed even if temperature is not raising.
+// Minimum temperature from start to raise fan speed.
 #define MIN_TEMP                70
 // Maximun temperature that starts raising fan speed even if temperature is not raising.
 #define MAX_TEMP                85
