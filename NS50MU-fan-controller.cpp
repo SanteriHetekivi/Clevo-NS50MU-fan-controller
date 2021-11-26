@@ -42,8 +42,10 @@
 
 // Wait time between loops.
 #define REFRESH_RATE            250
-// Wait this many milliseconds to change speed when temperature is raising, lowering or staying same.
-#define KEEP_REACTION_TIME_MS   1000
+// Wait this many milliseconds to change speed when temperature is raising.
+#define REACTION_TIME_MS_RAISE   1000
+// Wait this many milliseconds to change speed when temperature is lowering or staying same.
+#define REACTION_TIME_MS_LOWER   5000
 
 // Increment as percentage to raise fan speed.
 #define FAN_RAISE_INCREMENT     5
@@ -223,8 +225,10 @@ int main (int argc, char *argv[])
     const std::chrono::duration<int64_t, std::milli> sleep_time = std::chrono::milliseconds(
         REFRESH_RATE
     );
-    // Wait this many loops to change speed when temperature is raising, lowering or staying same.
-    const unsigned int reaction_loops = KEEP_REACTION_TIME_MS/REFRESH_RATE;
+    // Wait this many loops to change speed when temperature is raising.
+    const unsigned int reaction_loops_raise = REACTION_TIME_MS_RAISE/REFRESH_RATE;
+    // Wait this many loops to change speed when temperature is lowering or staying same.
+    const unsigned int reaction_loops_lower = REACTION_TIME_MS_LOWER/REFRESH_RATE;
 
     // Temperature.
     unsigned int temp = GetLocalTemp();
@@ -265,7 +269,7 @@ int main (int argc, char *argv[])
             ++raising_loops;
 
             // If has been raising more than reaction time gives.
-            if(reaction_loops < raising_loops)
+            if(reaction_loops_raise < raising_loops)
             {
                 // Raise fan speed by defined increment.
                 fanSpeed = std::min(
@@ -292,7 +296,7 @@ int main (int argc, char *argv[])
             ++lowering_or_staying_loops;
 
              // If has been lowering or staying the same, more than reaction time gives.
-            if(reaction_loops < lowering_or_staying_loops)
+            if(reaction_loops_lower < lowering_or_staying_loops)
             {
                 // Lower fan speed by defined increment.
                 fanSpeed = std::max(
