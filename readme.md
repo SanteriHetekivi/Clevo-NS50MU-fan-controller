@@ -1,6 +1,6 @@
 # This version
 
-This is fork from [Vega D's implementation](https://gitlab.com/vega-d/clevo-ns50mu-fan-controller) witch is fork from [François Kneib's one](https://gitlab.com/francois.kneib/clevo-N151ZU-fan-controller).
+This is fork from [Vega D's implementation](https://gitlab.com/vega-d/clevo-ns50mu-fan-controller) which is fork from [François Kneib's one](https://gitlab.com/francois.kneib/clevo-N151ZU-fan-controller).
 
 ## Prerequisites
 
