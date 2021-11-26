@@ -38,19 +38,21 @@
 #define FAN_SPEED_MAX           100
 
 // Maximun temperature that starts raising fan speed even if temperature is not raising.
+#define MIN_TEMP                70
+// Maximun temperature that starts raising fan speed even if temperature is not raising.
 #define MAX_TEMP                85
 
 // Wait time between loops.
 #define REFRESH_RATE            250
 // Wait this many milliseconds to change speed when temperature is raising.
-#define REACTION_TIME_MS_RAISE   1000
+#define REACTION_TIME_MS_RAISE  1000
 // Wait this many milliseconds to change speed when temperature is lowering or staying same.
-#define REACTION_TIME_MS_LOWER   5000
+#define REACTION_TIME_MS_LOWER  2000
 
 // Increment as percentage to raise fan speed.
 #define FAN_RAISE_INCREMENT     5
 // Increment as percentage to lower fan speed.
-#define FAN_LOWER_INCREMENT     5
+#define FAN_LOWER_INCREMENT     1
 
 
 /**
@@ -251,15 +253,20 @@ int main (int argc, char *argv[])
 
         // If
         if(
-            // temperature is raising
-            0 < (int)(
-                temp
-                -
-                lastTemp
-            )
-            ||
-            // or is over the max.
+            // temperature is over the max.
             MAX_TEMP < temp
+            ||
+            (
+                // or min temperature has been reached
+                MIN_TEMP < temp
+                // and temperature is raising
+                &&
+                0 < (int)(
+                    temp
+                    -
+                    lastTemp
+                )
+            )
         )
         {
             // Output information about it.
